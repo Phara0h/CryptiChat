@@ -1,55 +1,39 @@
-var https = require('https');
-var fs = require('fs');
-/**
- * Bootstrap app.
- */
-var sys = require('sys')
-require.paths.unshift(__dirname + '/../../lib/');
+var app = require('express')()
+  , express = require('express')
+  , https = require('https')
+  , io = require('socket.io')
+  , fs = require('fs')
 
-/**
-* Module dependencies.
-*/
-
-var express = require('express')
-  , stylus = require('stylus')
-  , nib = require('nib')
-  , sio = require('socket.io');
+var options = {
+  key: fs.readFileSync('./cr.key'),
+  cert: fs.readFileSync('./cr.cert')
+};
 
 /**
  * App.
  */
-var privateKey = fs.readFileSync('../key').toString();
-var certificate = fs.readFileSync('../crt').toString();
-var ca = fs.readFileSync('../intermediate.crt').toString();
+//var privateKey = fs.readFileSync('../key').toString();
+//var certificate = fs.readFileSync('../crt').toString();
+//var ca = fs.readFileSync('../intermediate.crt').toString();
 
-var app = express.createServer({key:privateKey,cert:certificate,ca:ca });
+//var app = express.createServer({key:privateKey,cert:certificate,ca:ca })
 
+var server = https.createServer(options,app);
 
 /**
  * App configuration.
  */
 
-...
-
+app.configure(function () {
+	app.use(express.static(__dirname + '/public'));
+});
 /**
  * App routes.
  */
 
 app.get('/', function (req, res) {
-  res.render('index', { layout: false });
+ res.sendfile(__dirname + '/index.html');
 });
 
-/**
- * App listen.
- */
-
-app.listen(443, function () {
-  var addr = app.address();
-  console.log('   app listening on http://' + addr.address + ':' + addr.port);
-});
-
-/**
- * Socket.IO server (single process only)
- */
-
-var io = sio.listen(app,{key:privateKey,cert:certificate,ca:ca});
+server.listen(443);
+io.listen(server);
